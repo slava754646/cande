@@ -93,3 +93,17 @@ canvas {
   z-index: 9;
   box-shadow: 0 0 12px rgba(169, 199, 255, 0.6);
 }
+
+.status {
+  position: fixed;
+  bottom: 24px;
+  left: 24px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: rgba(4, 9, 20, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  color: rgba(244, 247, 255, 0.8);
+  z-index: 10;
+}

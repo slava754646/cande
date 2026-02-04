@@ -15,10 +15,11 @@ const scene = new THREE.Scene();
 scene.fog = new THREE.FogExp2(0x3b4b6b, 0.022);
 
 const camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.1, 240);
-camera.position.set(0, 10, 20);
+camera.position.set(6, 12, 18);
 
 const controls = new PointerLockControls(camera, renderer.domElement);
 scene.add(controls.getObject());
+controls.getObject().lookAt(0, 4, 0);
 
 const ambient = new THREE.AmbientLight(0x9bb3d1, 0.35);
 scene.add(ambient);
@@ -131,8 +132,19 @@ const materials = {
 const voxelGroup = new THREE.Group();
 scene.add(voxelGroup);
 
+const playerGroup = new THREE.Group();
+scene.add(playerGroup);
+
 const boxGeometry = new THREE.BoxGeometry(1, 1, 1);
 const blocks = new Map();
+const otherPlayers = new Map();
+
+const playerId = crypto.randomUUID();
+const playerColor = new THREE.Color().setHSL(Math.random(), 0.6, 0.6);
+const playerChannel = new BroadcastChannel("candecraft");
+let multiplayerEnabled = true;
+let lastBroadcast = 0;
+const statusLabel = document.querySelector("#status");
 
 const keyFor = (x, y, z) => `${x},${y},${z}`;
 
@@ -155,6 +167,54 @@ const removeBlock = (x, y, z) => {
   voxel.geometry.dispose();
   blocks.delete(key);
 };
+
+const buildPlayerMesh = (color) => {
+  const body = new THREE.Mesh(
+    new THREE.BoxGeometry(0.9, 1.2, 0.5),
+    new THREE.MeshStandardMaterial({ color, roughness: 0.6, metalness: 0.1 })
+  );
+  const head = new THREE.Mesh(
+    new THREE.BoxGeometry(0.6, 0.6, 0.6),
+    new THREE.MeshStandardMaterial({ color: new THREE.Color(color).offsetHSL(0.02, 0.1, 0.1) })
+  );
+  head.position.y = 0.95;
+  body.add(head);
+  body.castShadow = true;
+  body.receiveShadow = true;
+  return body;
+};
+
+const upsertRemotePlayer = (payload) => {
+  if (!multiplayerEnabled || payload.id === playerId) return;
+  const existing = otherPlayers.get(payload.id);
+  if (existing) {
+    existing.mesh.position.set(payload.x, payload.y, payload.z);
+    existing.mesh.rotation.y = payload.ry;
+    existing.lastSeen = performance.now();
+    return;
+  }
+  const mesh = buildPlayerMesh(payload.color);
+  mesh.position.set(payload.x, payload.y, payload.z);
+  mesh.rotation.y = payload.ry;
+  playerGroup.add(mesh);
+  otherPlayers.set(payload.id, { mesh, lastSeen: performance.now() });
+};
+
+playerChannel.addEventListener("message", (event) => {
+  if (!event?.data?.type) return;
+  if (event.data.type === "player:update") {
+    upsertRemotePlayer(event.data.payload);
+  }
+  if (event.data.type === "player:leave" && otherPlayers.has(event.data.payload.id)) {
+    const player = otherPlayers.get(event.data.payload.id);
+    playerGroup.remove(player.mesh);
+    otherPlayers.delete(event.data.payload.id);
+  }
+});
+
+window.addEventListener("beforeunload", () => {
+  playerChannel.postMessage({ type: "player:leave", payload: { id: playerId } });
+});
 
 const noise = (x, z) => {
   const value = Math.sin(x * 0.25) * 0.6 + Math.cos(z * 0.2) * 0.4 + Math.sin((x + z) * 0.12) * 0.9;
@@ -208,6 +268,14 @@ floor.position.y = -0.6;
 floor.receiveShadow = true;
 scene.add(floor);
 
+const spawnMarker = new THREE.Mesh(
+  new THREE.CylinderGeometry(1.2, 1.4, 0.4, 24),
+  new THREE.MeshStandardMaterial({ color: 0x87b4ff, emissive: 0x223355, roughness: 0.3 })
+);
+spawnMarker.position.set(0, 0.2, 0);
+spawnMarker.receiveShadow = true;
+scene.add(spawnMarker);
+
 const keys = new Set();
 const velocity = new THREE.Vector3();
 const direction = new THREE.Vector3();
@@ -234,6 +302,14 @@ document.addEventListener("keyup", (event) => handleKey(event, false));
 document.addEventListener("keydown", (event) => {
   if (event.code === "KeyR") {
     buildWorld();
+  }
+  if (event.code === "KeyM") {
+    multiplayerEnabled = !multiplayerEnabled;
+    if (statusLabel) {
+      statusLabel.textContent = multiplayerEnabled
+        ? "Мультиплеер: увімкнено (сусідні вкладки)"
+        : "Мультиплеер: вимкнено";
+    }
   }
 });
 
@@ -314,6 +390,30 @@ const animate = () => {
     window.__candecraftReady = true;
     hasRendered = true;
   }
+
+  const now = performance.now();
+  if (multiplayerEnabled && now - lastBroadcast > 120) {
+    lastBroadcast = now;
+    const position = controls.getObject().position;
+    playerChannel.postMessage({
+      type: "player:update",
+      payload: {
+        id: playerId,
+        color: `#${playerColor.getHexString()}`,
+        x: position.x,
+        y: position.y - 1.1,
+        z: position.z,
+        ry: controls.getObject().rotation.y,
+      },
+    });
+  }
+
+  otherPlayers.forEach((player, id) => {
+    if (now - player.lastSeen > 5000) {
+      playerGroup.remove(player.mesh);
+      otherPlayers.delete(id);
+    }
+  });
   requestAnimationFrame(animate);
 };
 
