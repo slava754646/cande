@@ -8,6 +8,7 @@ renderer.setPixelRatio(window.devicePixelRatio);
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.setClearColor(0x0b111c, 1);
 sceneRoot.appendChild(renderer.domElement);
 
 const scene = new THREE.Scene();
@@ -275,6 +276,7 @@ renderer.domElement.addEventListener("mousedown", handlePointerAction);
 renderer.domElement.addEventListener("contextmenu", (event) => event.preventDefault());
 
 const clock = new THREE.Clock();
+let hasRendered = false;
 
 const animate = () => {
   const delta = Math.min(clock.getDelta(), 0.05);
@@ -308,6 +310,10 @@ const animate = () => {
   }
 
   renderer.render(scene, camera);
+  if (!hasRendered) {
+    window.__candecraftReady = true;
+    hasRendered = true;
+  }
   requestAnimationFrame(animate);
 };
 
