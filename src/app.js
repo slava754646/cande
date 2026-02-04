@@ -145,6 +145,9 @@ const playerChannel = new BroadcastChannel("candecraft");
 let multiplayerEnabled = true;
 let lastBroadcast = 0;
 const statusLabel = document.querySelector("#status");
+const menu = document.querySelector("#menu");
+const startButton = document.querySelector("#startButton");
+let menuVisible = true;
 
 const keyFor = (x, y, z) => `${x},${y},${z}`;
 
@@ -303,6 +306,9 @@ document.addEventListener("keydown", (event) => {
   if (event.code === "KeyR") {
     buildWorld();
   }
+  if (event.code === "Enter") {
+    hideMenu();
+  }
   if (event.code === "KeyM") {
     multiplayerEnabled = !multiplayerEnabled;
     if (statusLabel) {
@@ -314,9 +320,19 @@ document.addEventListener("keydown", (event) => {
 });
 
 renderer.domElement.addEventListener("click", () => {
+  if (menuVisible) return;
   if (!controls.isLocked) {
     controls.lock();
   }
+});
+
+const hideMenu = () => {
+  menuVisible = false;
+  menu?.classList.add("menu--hidden");
+};
+
+startButton?.addEventListener("click", () => {
+  hideMenu();
 });
 
 window.addEventListener("resize", () => {
