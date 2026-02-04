@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="uk">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CandeCraft — реалістичний воксельний світ</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="menu" id="menu">
+      <div class="menu__panel">
+        <p class="menu__tag">CandeCraft</p>
+        <h1>Головне меню</h1>
+        <p class="menu__lead">Досліджуйте процедурний світ, додавайте блоки та грайте у локальний мультиплеєр між вкладками.</p>
+        <button class="menu__button" id="startButton" type="button">Почати гру</button>
+        <div class="menu__hint">Натисніть Enter, щоб почати.</div>
+      </div>
+    </div>
+    <div class="hud">
+      <div>
+        <h1>CandeCraft</h1>
+        <p>Міні-пісочниця у стилі Minecraft з більш реалістичним освітленням і блоками.</p>
+      </div>
+      <div class="hud__panel">
+        <h2>Керування</h2>
+        <ul>
+          <li><strong>Клік</strong> — зафіксувати камеру</li>
+          <li><strong>WASD</strong> — рух</li>
+          <li><strong>Миша</strong> — огляд</li>
+          <li><strong>Пробіл</strong> — стрибок</li>
+          <li><strong>Shift</strong> — присісти</li>
+          <li><strong>ЛКМ</strong> — прибрати блок</li>
+          <li><strong>ПКМ</strong> — додати блок</li>
+          <li><strong>M</strong> — мультиплеер у сусідніх вкладках</li>
+          <li><strong>R</strong> — перегенерувати світ</li>
+        </ul>
+      </div>
+    </div>
+    <div class="status" id="status">Мультиплеер: локально (BroadcastChannel)</div>
+    <div class="crosshair"></div>
+    <div id="scene"></div>
+
+    <script type="module" src="src/app.js"></script>
+  </body>
+</html>
