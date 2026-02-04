@@ -79,3 +79,17 @@ canvas {
 .hud__panel strong {
   color: #a9c7ff;
 }
+
+.crosshair {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  width: 18px;
+  height: 18px;
+  transform: translate(-50%, -50%);
+  border: 2px solid rgba(255, 255, 255, 0.7);
+  border-radius: 4px;
+  pointer-events: none;
+  z-index: 9;
+  box-shadow: 0 0 12px rgba(169, 199, 255, 0.6);
+}
